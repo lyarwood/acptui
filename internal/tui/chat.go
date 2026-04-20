@@ -9,7 +9,7 @@ import (
 	"github.com/lyarwood/acptui/internal/ambient"
 )
 
-func renderChat(session ambient.Session, messages []ambient.Message, expandedIDs map[string]bool, scrollOffset int, atBottom bool, width, height int, inputView string, sending bool) string {
+func renderChat(session ambient.Session, messages []ambient.Message, expandedIDs map[string]bool, scrollOffset int, atBottom bool, awaitingInput bool, width, height int, inputView string, sending bool) string {
 	// Session header bar
 	name := session.Name
 	if name == "" {
@@ -31,9 +31,9 @@ func renderChat(session ambient.Session, messages []ambient.Message, expandedIDs
 	if len(messages) == 0 && !sending {
 		empty := lipgloss.Place(width, messageArea, lipgloss.Center, lipgloss.Center,
 			dimStyle.Render("No messages yet."))
-		separator := dimStyle.Render(strings.Repeat("─", width))
-		input := "│ " + inputView
-		return sessionHeader + "\n" + empty + "\n" + separator + "\n" + input
+		sep := dimStyle.Render(strings.Repeat("─", width))
+		inp := "│ " + inputView
+		return sessionHeader + "\n" + empty + "\n" + sep + "\n" + inp
 	}
 
 	var lines []string
@@ -83,8 +83,14 @@ func renderChat(session ambient.Session, messages []ambient.Message, expandedIDs
 		content += strings.Repeat("\n", messageArea-visibleCount)
 	}
 
-	separator := dimStyle.Render(strings.Repeat("─", width))
-	input := "│ " + inputView
+	var separator, input string
+	if awaitingInput {
+		separator = phasePendingStyle.Render(strings.Repeat("─", width))
+		input = phasePendingStyle.Render("▶ ") + inputView
+	} else {
+		separator = dimStyle.Render(strings.Repeat("─", width))
+		input = "│ " + inputView
+	}
 
 	return sessionHeader + "\n" + content + "\n" + separator + "\n" + input
 }

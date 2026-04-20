@@ -167,10 +167,11 @@ type Model struct {
 	chatSending   bool
 	chatScroll    int
 	chatAtBottom  bool
-	chatSSECh      <-chan ambient.SSEEvent
-	chatSSECancel  context.CancelFunc
-	chatStreaming   string // messageID of in-progress assistant message
-	chatExpandedIDs map[string]bool // reasoning message IDs that are expanded
+	chatSSECh        <-chan ambient.SSEEvent
+	chatSSECancel    context.CancelFunc
+	chatStreaming     string          // messageID of in-progress assistant message
+	chatExpandedIDs  map[string]bool  // reasoning message IDs that are expanded
+	chatAwaitingInput bool            // agent finished a run and is waiting for user input
 }
 
 func newBaseModel(cc *ambient.ClientConfig) Model {
@@ -311,6 +312,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "TEXT_MESSAGE_START":
+			m.chatAwaitingInput = false
 			m.chatStreaming = msg.event.MessageID
 			m.chatMessages = append(m.chatMessages, ambient.Message{
 				ID:   msg.event.MessageID,
@@ -346,6 +348,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "RUN_FINISHED":
 			m.chatStreaming = ""
 			m.chatSending = false
+			m.chatAwaitingInput = true
+			m.chatAtBottom = true
 		case "RUN_ERROR":
 			m.chatStreaming = ""
 			m.chatSending = false
@@ -554,6 +558,7 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.chatMessages = nil
 			m.chatStreaming = ""
 			m.chatExpandedIDs = make(map[string]bool)
+			m.chatAwaitingInput = false
 			m.err = nil
 			m.chatInput.SetValue("")
 			m.chatInput.Focus()
@@ -661,6 +666,7 @@ func (m Model) updateDetail(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.chatMessages = nil
 			m.chatStreaming = ""
 			m.chatExpandedIDs = make(map[string]bool)
+			m.chatAwaitingInput = false
 			m.err = nil
 			m.chatInput.SetValue("")
 			m.chatInput.Focus()
@@ -698,6 +704,7 @@ func (m Model) updateChat(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		content := strings.TrimSpace(m.chatInput.Value())
 		if content != "" && !m.chatSending {
 			m.chatSending = true
+			m.chatAwaitingInput = false
 			m.chatAtBottom = true
 			m.chatInput.SetValue("")
 			m.err = nil
@@ -1390,7 +1397,7 @@ func (m Model) View() string {
 		if m.chatLoading {
 			content = dimStyle.Render("Loading messages...")
 		} else {
-			content = renderChat(m.chatSession, m.chatMessages, m.chatExpandedIDs, m.chatScroll, m.chatAtBottom, m.width, m.height-3, m.chatInput.View(), m.chatSending)
+			content = renderChat(m.chatSession, m.chatMessages, m.chatExpandedIDs, m.chatScroll, m.chatAtBottom, m.chatAwaitingInput, m.width, m.height-3, m.chatInput.View(), m.chatSending)
 		}
 	case viewFiles:
 		content = renderFiles(m.fileEntries, m.fileCursor, m.filePath, m.fileContent, m.viewingFile, m.width, m.height-3)
