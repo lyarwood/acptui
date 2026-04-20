@@ -15,6 +15,8 @@ A terminal UI for browsing and managing [Ambient Code Platform](../platform/) se
 - **File browser** — browse the session workspace (directories and file contents)
 - **Task viewer** — background task list with status, token usage, and tool metrics
 - **Web UI integration** — open any session in the browser with `w`
+- **Export** — export session conversations to markdown (`Ctrl+E` in chat or `acptui export`)
+- **CLI session creation** — `acptui create` with repos, model, and workflow flags
 - **OAuth login** — browser-based OpenShift OAuth authentication (`acptui login`)
 - **5 color themes** — `default`, `catppuccin`, `dracula`, `nord`, `light`
 
@@ -125,6 +127,7 @@ acptui --insecure-tls         # skip TLS certificate verification
 | `up` / `down` | Scroll one line |
 | `pgup` / `pgdn` | Scroll 10 lines |
 | `home` / `end` | Jump to top / bottom |
+| `ctrl+e` | Export conversation to markdown |
 | `ctrl+f` | Browse workspace files |
 | `ctrl+t` | View background tasks |
 | `ctrl+r` | Reconnect SSE stream (refresh) |
@@ -187,14 +190,31 @@ acptui --theme light         # high contrast for light terminals
 acptui --theme default       # the default theme
 ```
 
-### Other commands
+### Commands
 
 ```sh
-acptui login https://ambient-code.apps.example.com   # authenticate via OpenShift OAuth
-acptui version                                        # print version
-```
+# Launch TUI
+acptui                        # project picker
+acptui kubevirt               # jump to session list for a project
 
-For non-interactive session listing, use [`acpctl`](../platform/components/ambient-cli/) (`acpctl get sessions`, `acpctl get projects`).
+# Create a session
+acptui create kubevirt --prompt "Fix bug #42" --repo https://github.com/org/repo
+acptui create kubevirt --prompt "Generate tasks" \
+  --repo https://github.com/org/repo1 \
+  --repo https://github.com/org/repo2 \
+  --workflow-url https://github.com/org/workflows \
+  --workflow-branch main \
+  --workflow-path workflows/my-workflow
+
+# Export a session to markdown
+acptui export kubevirt session-abc123
+acptui export kubevirt session-abc123 -o review.md
+
+# Authentication
+acptui login https://ambient-code.apps.example.com
+
+acptui version
+```
 
 ## Session phases
 
@@ -240,8 +260,11 @@ internal/
     types.go                      # Domain types (Session, Message, SSEEvent, etc.)
     client.go                     # Provider: API calls, SSE streaming
     config.go                     # Config loading, ClientConfig, SaveConfig
+    export.go                     # Markdown formatting for session export
   cmd/                            # Cobra CLI commands
-    root.go                       # Root command (launches TUI with project picker)
+    root.go                       # Root command (TUI with project picker or direct launch)
+    create.go                     # Scripted session creation with repos and workflows
+    export.go                     # Export session conversation to markdown
     login.go                      # OpenShift OAuth login flow
     version.go                    # Version output
   tui/                            # Bubble Tea TUI

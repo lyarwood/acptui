@@ -93,6 +93,8 @@ func fallbackProject(cfg *ambient.Config) string {
 func init() {
 	rootCmd.Flags().StringVar(&themeName, "theme", "", "color theme (default, catppuccin, dracula, nord, light)")
 	rootCmd.Flags().BoolVar(&insecureTLS, "insecure-tls", false, "skip TLS certificate verification")
+	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(versionCmd)
 }
