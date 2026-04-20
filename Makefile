@@ -5,7 +5,7 @@ LDFLAGS    := -ldflags "-X '$(MODULE)/internal/cmd.Version=$(VERSION)'"
 GO         := go
 GINKGO     := ginkgo
 
-.PHONY: all build test test-verbose test-cover lint fmt vet clean install run
+.PHONY: all build test test-verbose test-cover lint fmt vet clean install run demo
 
 all: build
 
@@ -40,3 +40,13 @@ install: build
 
 run: build
 	./bin/$(BINARY)
+
+demo: build
+	@mkdir -p /tmp/acptui-demo
+	@cp demo/config.json /tmp/acptui-demo/
+	@echo "Starting mock API server..."
+	@$(GO) run demo/mock-server.go & echo $$! > /tmp/acptui-demo/server.pid
+	@sleep 1
+	vhs demo.tape
+	@kill $$(cat /tmp/acptui-demo/server.pid) 2>/dev/null || true
+	@rm -rf /tmp/acptui-demo

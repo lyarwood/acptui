@@ -2,6 +2,8 @@
 
 A terminal UI for browsing and managing [Ambient Code Platform](../platform/) sessions.
 
+![acptui demo](demo.gif)
+
 ## Features
 
 - **Project picker** — lists all projects you have access to; select one to browse its sessions

@@ -1,0 +1,5 @@
+{
+  "api_url": "http://localhost:9999",
+  "access_token": "demo-token-for-recording-only",
+  "user": "demo-user"
+}
