@@ -44,9 +44,11 @@ run: build
 demo: build
 	@mkdir -p /tmp/acptui-demo
 	@cp demo/config.json /tmp/acptui-demo/
+	@fuser -k 9999/tcp 2>/dev/null || true
+	@sleep 1
 	@echo "Starting mock API server..."
 	@$(GO) run demo/mock-server.go & echo $$! > /tmp/acptui-demo/server.pid
-	@sleep 1
+	@sleep 2
 	vhs demo.tape
 	@kill $$(cat /tmp/acptui-demo/server.pid) 2>/dev/null || true
-	@rm -rf /tmp/acptui-demo
+	@rm -rf /tmp/acptui-demo demo-export.md
