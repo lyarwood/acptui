@@ -22,9 +22,13 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "acptui",
+	Use:   "acptui [project]",
 	Short: "Ambient Code TUI Viewer - browse and manage Ambient Code Platform sessions",
-	Long:  "acptui connects to the Ambient Code Platform API and displays sessions in a TUI. Select a project, then browse its sessions.",
+	Long: `acptui connects to the Ambient Code Platform API and displays sessions in a TUI.
+
+Without arguments, shows the project picker. With a project name, jumps
+directly to the session list for that project.`,
+	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if themeName != "" {
 			if !tui.SetTheme(themeName) {
@@ -37,19 +41,35 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("connecting to API: %w", err)
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		// If a project is given as an arg, skip the picker
+		if len(args) > 0 {
+			project := args[0]
+			provider, err := cc.ProviderForProject(project)
+			if err != nil {
+				return fmt.Errorf("creating client: %w", err)
+			}
+			sessions, err := provider.ListSessions(ctx)
+			if err != nil {
+				return fmt.Errorf("listing sessions: %w", err)
+			}
+			model := tui.NewModelWithProject(sessions, provider, cc, project)
+			p := tea.NewProgram(model, tea.WithAltScreen())
+			_, err = p.Run()
+			return err
+		}
+
 		cfg, err := ambient.LoadConfig()
 		if err != nil {
 			return fmt.Errorf("loading config: %w", err)
 		}
 
-		// Use configured project to bootstrap the provider for listing projects
 		bootstrap, err := cc.ProviderForProject(fallbackProject(cfg))
 		if err != nil {
 			return fmt.Errorf("creating client: %w", err)
 		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
 
 		projects, err := bootstrap.ListProjects(ctx)
 		if err != nil {

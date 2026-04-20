@@ -167,7 +167,7 @@ type Model struct {
 	chatExpandedIDs map[string]bool // reasoning message IDs that are expanded
 }
 
-func NewModel(projects []ambient.Project, cc *ambient.ClientConfig) Model {
+func newBaseModel(cc *ambient.ClientConfig) Model {
 	ti := textinput.New()
 	ti.Placeholder = "filter sessions..."
 	ti.CharLimit = 100
@@ -201,8 +201,6 @@ func NewModel(projects []ambient.Project, cc *ambient.ClientConfig) Model {
 	cpth.CharLimit = 500
 
 	return Model{
-		view:             viewProjects,
-		projects:         projects,
 		filterInput:      ti,
 		chatInput:        ci,
 		createPrompt:     cp,
@@ -214,6 +212,23 @@ func NewModel(projects []ambient.Project, cc *ambient.ClientConfig) Model {
 		frontendURL:      strings.TrimRight(cc.FrontendURL, "/"),
 		cc:               cc,
 	}
+}
+
+func NewModel(projects []ambient.Project, cc *ambient.ClientConfig) Model {
+	m := newBaseModel(cc)
+	m.view = viewProjects
+	m.projects = projects
+	return m
+}
+
+func NewModelWithProject(sessions []ambient.Session, provider *ambient.Provider, cc *ambient.ClientConfig, project string) Model {
+	m := newBaseModel(cc)
+	m.view = viewList
+	m.sessions = sessions
+	m.filtered = sessions
+	m.provider = provider
+	m.project = project
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
@@ -490,6 +505,9 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case matchKey(msg, keys.Back):
+		if len(m.projects) == 0 {
+			return m, tea.Quit
+		}
 		m.view = viewProjects
 		m.sessions = nil
 		m.filtered = nil

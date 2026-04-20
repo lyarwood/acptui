@@ -22,7 +22,7 @@ Sleep 500ms
 Down
 Sleep 500ms
 
-# Select a project
+# Select first project
 Up
 Sleep 300ms
 Up
@@ -106,15 +106,13 @@ Sleep 1s
 Type "Add rate limiting to the /api/v2 endpoints"
 Sleep 500ms
 
-# Tab to repo field
+# Tab to repo field and use suggestion
 Tab
 Sleep 500ms
-
-# Use repo suggestion
 Right
 Sleep 500ms
 
-# Tab to model
+# Tab past branch to model
 Tab
 Sleep 300ms
 Tab
@@ -126,7 +124,7 @@ Sleep 500ms
 Right
 Sleep 500ms
 
-# Tab to workflow
+# Tab to workflow and browse
 Tab
 Sleep 500ms
 Right
@@ -134,14 +132,23 @@ Sleep 500ms
 Right
 Sleep 1s
 
-# Cancel
+# Cancel and go back to project picker
 Escape
 Sleep 1s
-
-# Back to project list
 Escape
 Sleep 1s
 
 # Quit
+Type "q"
+Sleep 1s
+
+# --- Direct project launch ---
+Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui my-team"
+Enter
+Sleep 2s
+
+# Quick look then quit
+Down
+Sleep 500ms
 Type "q"
 Sleep 1s
