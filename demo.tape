@@ -82,6 +82,10 @@ Sleep 2s
 Tab
 Sleep 1s
 
+# Export conversation to markdown
+Ctrl+E
+Sleep 2s
+
 # Open tasks viewer
 Ctrl+T
 Sleep 2s
@@ -146,9 +150,21 @@ Sleep 1s
 Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui my-team"
 Enter
 Sleep 2s
-
-# Quick look then quit
 Down
 Sleep 500ms
 Type "q"
 Sleep 1s
+
+# --- CLI create ---
+Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui create my-team --prompt 'Fix the auth race condition' --repo https://github.com/acme/backend --model claude-sonnet-4-6"
+Enter
+Sleep 2s
+
+# --- CLI export ---
+Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui export my-team session-001 -o demo-export.md"
+Enter
+Sleep 2s
+
+Type "head -20 demo-export.md"
+Enter
+Sleep 3s

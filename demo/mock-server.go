@@ -82,6 +82,24 @@ func main() {
 		<-r.Context().Done()
 	})
 
+	mux.HandleFunc("/api/projects/my-team/agentic-sessions/session-001/export", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{
+			"sessionId":   "session-001",
+			"projectName": "my-team",
+			"exportDate":  "2026-04-20T12:00:00Z",
+			"hasLegacy":   false,
+			"aguiEvents": []map[string]any{
+				{"type": "MESSAGES_SNAPSHOT", "messages": []map[string]any{
+					{"id": "m1", "role": "user", "content": "Can you refactor the auth middleware to use the new JWT library?"},
+					{"id": "m2", "role": "reasoning", "content": "The user wants to refactor the auth middleware. Let me analyze the race condition."},
+					{"id": "m3", "role": "assistant", "content": "I've analyzed the auth middleware and found the race condition in token refresh.\n\n1. **Root cause**: `refreshToken()` reads and writes without synchronization.\n2. **Fix**: Replace `sync.Mutex` with `singleflight.Group`.\n3. **Migration**: Swap jwt/v4 for jwt/v5.\n\nShall I proceed with the fix?"},
+					{"id": "m4", "role": "user", "content": "Looks good, go ahead."},
+					{"id": "m5", "role": "assistant", "content": "Done! Fixed the race condition with singleflight, updated JWT library, and added concurrent test coverage."},
+				}},
+			},
+		})
+	})
+
 	mux.HandleFunc("/api/projects/my-team/agentic-sessions/session-001/agui/run", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{
 			"runId":    "run-demo-001",
