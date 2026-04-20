@@ -1,4 +1,5 @@
 bin/
 coverage.out
 coverage.html
-session-001.md
+session-*.md
+demo-export.md
