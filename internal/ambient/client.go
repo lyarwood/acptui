@@ -689,6 +689,64 @@ type sseMessage struct {
 	} `json:"metadata,omitempty"`
 }
 
+func (p *Provider) ExportSession(ctx context.Context, sessionName string) ([]Message, error) {
+	body, err := p.do(ctx, http.MethodGet, "/api/projects/"+p.project+"/agentic-sessions/"+sessionName+"/export")
+	if err != nil {
+		return nil, err
+	}
+
+	var export struct {
+		AGUIEvents []struct {
+			Type     string       `json:"type"`
+			Messages []sseMessage `json:"messages,omitempty"`
+		} `json:"aguiEvents"`
+	}
+	if err := json.Unmarshal(body, &export); err != nil {
+		return nil, fmt.Errorf("parse export: %w", err)
+	}
+
+	seenIDs := make(map[string]bool)
+	var messages []Message
+	for _, evt := range export.AGUIEvents {
+		if evt.Type != "MESSAGES_SNAPSHOT" {
+			continue
+		}
+		for _, m := range evt.Messages {
+			if m.ID != "" && seenIDs[m.ID] {
+				continue
+			}
+			if m.Metadata != nil && m.Metadata.Hidden {
+				if m.ID != "" {
+					seenIDs[m.ID] = true
+				}
+				continue
+			}
+			if m.Role == "tool" {
+				if m.ID != "" {
+					seenIDs[m.ID] = true
+				}
+				continue
+			}
+			if m.Role == "assistant" && strings.TrimSpace(m.Content) == "" {
+				if m.ID != "" {
+					seenIDs[m.ID] = true
+				}
+				continue
+			}
+			if m.ID != "" {
+				seenIDs[m.ID] = true
+			}
+			messages = append(messages, Message{
+				ID:          m.ID,
+				Role:        m.Role,
+				Content:     m.Content,
+				IsReasoning: m.Role == "reasoning",
+			})
+		}
+	}
+	return messages, nil
+}
+
 // SendMessage sends a user message to a session via the AG-UI run endpoint.
 func (p *Provider) SendMessage(ctx context.Context, sessionName, content string) error {
 	url := p.baseURL + "/api/projects/" + p.project + "/agentic-sessions/" + sessionName + "/agui/run"

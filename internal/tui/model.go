@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -98,6 +99,11 @@ type fileContentLoadedMsg struct {
 type tasksLoadedMsg struct {
 	tasks []ambient.TaskInfo
 	err   error
+}
+
+type exportDoneMsg struct {
+	path string
+	err  error
 }
 
 type pollTickMsg struct{}
@@ -423,6 +429,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case exportDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err
+		} else {
+			m.err = nil
+			m.actionInProgress = fmt.Sprintf("Exported to %s", msg.path)
+		}
+		return m, nil
+
 	case sessionActionMsg:
 		m.actionInProgress = ""
 		if msg.err != nil {
@@ -735,6 +750,9 @@ func (m Model) updateChat(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "tab":
 		m.toggleNearestReasoning()
 		return m, nil
+
+	case "ctrl+e":
+		return m, m.exportSession()
 
 	case "ctrl+f":
 		m.view = viewFiles
@@ -1255,6 +1273,23 @@ func (m Model) loadProjects() tea.Cmd {
 	}
 }
 
+func (m Model) exportSession() tea.Cmd {
+	return func() tea.Msg {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		messages, err := m.provider.ExportSession(ctx, m.chatSession.ID)
+		if err != nil {
+			return exportDoneMsg{err: err}
+		}
+		md := ambient.FormatMarkdown(m.chatSession, messages)
+		filename := m.chatSession.ID + ".md"
+		if err := os.WriteFile(filename, []byte(md), 0644); err != nil {
+			return exportDoneMsg{err: fmt.Errorf("write file: %w", err)}
+		}
+		return exportDoneMsg{path: filename}
+	}
+}
+
 func (m Model) loadModels() tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -1402,7 +1437,7 @@ func (m Model) renderFooter() string {
 		if name == "" {
 			name = m.chatSession.ID
 		}
-		return helpStyle.Render(fmt.Sprintf("[%s] enter:send  tab:thinking  ctrl+f:files  ctrl+t:tasks  scroll:up/down/pgup/pgdn  ctrl+r:refresh  esc:back", name))
+		return helpStyle.Render(fmt.Sprintf("[%s] enter:send  tab:thinking  ctrl+e:export  ctrl+f:files  ctrl+t:tasks  ctrl+r:refresh  esc:back", name))
 	default:
 		if m.actionInProgress != "" {
 			return helpStyle.Render(fmt.Sprintf("[%s] %s", m.project, m.actionInProgress))
