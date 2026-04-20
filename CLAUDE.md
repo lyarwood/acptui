@@ -17,7 +17,7 @@ make test-cover     # coverage report to coverage.html
 
 - `internal/ambient/` — data layer: direct HTTP client for the old backend API (`/api/projects/{project}/agentic-sessions`). `Provider` exposes `ListSessions`, `ListProjects`, `StartSession`, `StopSession`, `DeleteSession`, `CreateSession`, `ListModels`, `ListWorkflows`, `ListWorkspace`, `ListTasks`, `GetFileContent`, `StreamEvents`, and `SendMessage`. `ClientConfig` stores connection parameters and creates project-scoped providers on demand via `ProviderForProject(project)`. `config.go` reads config from `~/.config/ambient/config.json`. `types.go` defines thin domain types.
 - `internal/tui/` — Bubble Tea TUI with multiple views: project picker, session list, session detail, chat (with SSE streaming and collapsible thinking blocks), create session form, workspace file browser, and task viewer. Filtering is live with regex support and prefix syntax (`phase:`, `model:`, `repo:`). Multiple space-separated terms are ANDed. Theming is in `theme.go` — 5 built-in themes: default, catppuccin, dracula, nord, light. Selected via `--theme` flag.
-- `internal/cmd/` — Cobra commands: root (launches TUI with project picker), `list` (non-interactive: lists projects by default, sessions with a project arg), `login` (OpenShift OAuth browser-based login), `version`.
+- `internal/cmd/` — Cobra commands: root (launches TUI with project picker), `login` (OpenShift OAuth browser-based login), `version`.
 
 ## Testing conventions
 

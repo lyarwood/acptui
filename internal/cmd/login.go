@@ -97,10 +97,6 @@ The URL should be the frontend URL of your Ambient Code Platform instance
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(loginCmd)
-}
-
 // discoverOAuthServer finds the OAuth server URL by following the frontend's
 // /oauth/start redirect, which reveals the OAuth server hostname.
 func discoverOAuthServer(frontendURL string) (string, error) {

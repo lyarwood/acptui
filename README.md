@@ -15,7 +15,7 @@ A terminal UI for browsing and managing [Ambient Code Platform](../platform/) se
 - **File browser** — browse the session workspace (directories and file contents)
 - **Task viewer** — background task list with status, token usage, and tool metrics
 - **Web UI integration** — open any session in the browser with `w`
-- **CLI mode** — non-interactive `list` subcommand with `--json` output
+- **OAuth login** — browser-based OpenShift OAuth authentication (`acptui login`)
 - **5 color themes** — `default`, `catppuccin`, `dracula`, `nord`, `light`
 
 ## Installation
@@ -187,20 +187,14 @@ acptui --theme light         # high contrast for light terminals
 acptui --theme default       # the default theme
 ```
 
-### CLI
+### Other commands
 
 ```sh
-acptui list                              # list all projects
-acptui list kubevirt                     # list sessions in a project
-acptui list kubevirt --json              # JSON output
-acptui list kubevirt --phase Running     # filter by phase
-acptui list kubevirt --model sonnet      # filter by model
-acptui list kubevirt --repo github.com   # filter by repo
-acptui list --limit 10                   # limit results
-acptui list --json                       # projects as JSON
-acptui login https://ambient-code.apps.example.com   # authenticate
-acptui version                           # print version
+acptui login https://ambient-code.apps.example.com   # authenticate via OpenShift OAuth
+acptui version                                        # print version
 ```
+
+For non-interactive session listing, use [`acpctl`](../platform/components/ambient-cli/) (`acpctl get sessions`, `acpctl get projects`).
 
 ## Session phases
 
@@ -248,7 +242,6 @@ internal/
     config.go                     # Config loading, ClientConfig, SaveConfig
   cmd/                            # Cobra CLI commands
     root.go                       # Root command (launches TUI with project picker)
-    list.go                       # Non-interactive listing (projects or sessions)
     login.go                      # OpenShift OAuth login flow
     version.go                    # Version output
   tui/                            # Bubble Tea TUI

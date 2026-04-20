@@ -145,20 +145,3 @@ Sleep 1s
 # Quit
 Type "q"
 Sleep 1s
-
-# --- CLI ---
-Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui list"
-Enter
-Sleep 2s
-
-Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui list my-team"
-Enter
-Sleep 2s
-
-Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui list my-team --phase Running"
-Enter
-Sleep 2s
-
-Type "AMBIENT_CONFIG=/tmp/acptui-demo/config.json ./bin/acptui list my-team --json | head -15"
-Enter
-Sleep 3s
